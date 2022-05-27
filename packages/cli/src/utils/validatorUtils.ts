@@ -78,10 +78,7 @@ export function getParameterValidators(parameter: ts.ParameterDeclaration, param
         if (typeof value !== 'string') {
           throw new GenerateMetadataError(`${name} parameter use string.`);
         }
-        validateObj[name] = {
-          errorMsg: getErrorMsg(comment),
-          value: removeSurroundingQuotes(value),
-        };
+        validateObj[name] = parsePattern(getErrorMsg(comment), value);
         break;
       default:
         if (name.startsWith('is')) {
@@ -165,10 +162,7 @@ export function getPropertyValidators(property: ts.PropertyDeclaration | ts.Type
         if (typeof value !== 'string') {
           throw new GenerateMetadataError(`${name} parameter use string.`);
         }
-        validateObj[name] = {
-          errorMsg: getErrorMsg(commentToString(comment)),
-          value: removeSurroundingQuotes(value),
-        };
+        validateObj[name] = parsePattern(getErrorMsg(commentToString(comment)), value);
         break;
       default:
         if (name.startsWith('is')) {
@@ -207,6 +201,19 @@ function getParameterTagSupport() {
     'minDate',
     'maxDate',
   ];
+}
+
+function parsePattern(errMsg: string | undefined, value: string) {
+  let perrMsg = errMsg;
+  const pcomment = value.split(/\n\n/);
+  if (pcomment[1]) {
+    if (perrMsg) perrMsg = pcomment[1].concat(' ', perrMsg);
+    else perrMsg = pcomment[1];
+  }
+  return {
+    errorMsg: perrMsg,
+    value: removeSurroundingQuotes(pcomment[0].replace(/\n/gm, ``)),
+  };
 }
 
 function removeSurroundingQuotes(str: string) {
